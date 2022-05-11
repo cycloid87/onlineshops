@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.naver',
     'cart',
     'coupon',
+    'order',
 ]
 
 MIDDLEWARE = [
@@ -88,7 +89,7 @@ DATABASES = {
         'NAME': 'onlineshop',
         'USER': 'admin',
         'PASSWORD': 'qwer1234',
-        'HOST': 'onlineshop.cvwvhr7gqfmz.ap-northeast-2.rds.amazonaws.com',
+        'HOST': 'onlineshop.c17mp2q6arqr.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
     }
 }
@@ -132,10 +133,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AWS_ACCESS_KEY_ID = 'AKIAWF4UGQOTZ4EFULFR'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = 'AKIAZI3QH5P7JGOYNVH2'
+AWS_SECRET_ACCESS_KEY = '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'
 AWS_REGION = 'ap-northeast-2'
-AWS_STORAGE_BUCKET_NAME = 'onlineshopgh'
+AWS_STORAGE_BUCKET_NAME = 'onlineshop-jj'
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME, AWS_REGION)
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
@@ -160,3 +161,6 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 
 CART_ID = 'cart_in_session'
+
+IAMPORT_KEY = '6274773240701252'
+IAMPORT_SECRET = 'e99691d3523d842c6a03a1621ea1308931f4197f67ff49e7925daca04bef03d276852b5be3e2b828'
