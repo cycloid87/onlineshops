@@ -4,6 +4,7 @@ from coupon.models import Coupon
 from shop.models import Product
 import hashlib
 from .iamport import payments_prepare, find_transaction
+from django.db.models.signals import post_save
 
 class Order(models.Model) :
     first_name = models.CharField(max_length=50)
@@ -65,26 +66,51 @@ class OrderTransactionManager(models.Manager) :
             transaction.success = success
             transaction.transaction_status = transaction_status
 
-            try :
-                transaction.save()
-            except Exception as e:
-                print("save error", e)
-            return transaction.merchant_order_id
+        try :
+            transaction.save()
+        except Exception as e:
+            print("save error", e)
+        return transaction.merchant_order_id
 
-        def get_transaction(self, merchant_order_id):
-            result = find_transaction(merchant_order_id)
-            if result['status'] == 'paid' :
-                return result
-            else :
-                return None
+    def get_transaction(self, merchant_order_id):
+        result = find_transaction(merchant_order_id)
+        if result['status'] == 'paid' :
+            return result
+        else :
+            return None
 
-    class OrderTransaction(models.Model) :
-        order = models.ForeignKey(Order, on_delete=models.CASCADE)
-        merchant_order_id = models.CharField(max_length=120, null=True, blank=True)
-        transaction_id = models.CharField(max_length=120, null=True, blank=True)
-        amount = models.PositiveIntegerField(default=0)
-        transaction_status = models.CharField(max_length=220, null=True, blank=True)
-        type = models.CharField(max_length=120, blank=True)
-        created = models.DateTimeField(auto_now_add=True, auto_now=False)
+class OrderTransaction(models.Model) :
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    merchant_order_id = models.CharField(max_length=120, null=True, blank=True)
+    transaction_id = models.CharField(max_length=120, null=True, blank=True)
+    amount = models.PositiveIntegerField(default=0)
+    transaction_status = models.CharField(max_length=220, null=True, blank=True)
+    type = models.CharField(max_length=120, blank=True)
+    created = models.DateTimeField(auto_now_add=True, auto_now=False)
 
-        object
+    objects = OrderTransactionManager()
+
+    def __str__(self):
+        return str(self.order.id)
+
+    class Meta:
+        ordering = ['-created']
+
+def order_payment_validation(sender, instance, created, *args, **kwargs):
+    if instance.transaction_id:
+        import_transaction = OrderTransaction.objects.get_transaction(merchant_order_id=instance.merchant_order_id)
+
+        merchant_order_id = import_transaction['merchant_order_id']
+        imp_id = import_transaction['imp_id']
+        amount = import_transaction['amount']
+
+        local_transaction = OrderTransaction.objects.filter(merchant_order_id=merchant_order_id,
+                                                            transaction_id=imp_id,
+                                                            amount=amount
+                                                            ).exists()
+
+        if not import_transaction or not local_transaction:
+            raise ValueError("비정상 거래입니다.")
+
+# 결제 정보가 생성된 후에 호출할 함수를 연결해준다.
+post_save.connect(order_payment_validation, sender=OrderTransaction)

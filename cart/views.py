@@ -6,14 +6,10 @@ from .forms import AddProductForm
 from .cart import Cart
 from coupon.forms import AddCouponForm
 
-
-
-
 @require_POST
 def add(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
-
     form = AddProductForm(request.POST)
     if form.is_valid():
         cd = form.cleaned_data
