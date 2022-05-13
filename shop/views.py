@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
 from cart.forms import AddProductForm
-#
+from shop.forms import ProductForm
+
 from allauth.account.signals import user_signed_up
 from django.dispatch import receiver
 
@@ -26,14 +27,26 @@ def product_detail(request, id, product_slug=None):
     add_to_cart = AddProductForm(initial={'quantity': 1})
     return render(request, 'shop/detail.html', {'product': product, 'add_to_cart': add_to_cart})
 
-#
-# @receiver(user_signed_up)
-# def user_signed_up_(**kwargs):
-#     user = kwargs['user']
-#     extra_data = user.socialaccount_set.filter(provider='naver')[0].extra_data
-#     user.last_name = extra_data['name'][0:4]
-#     user.first_name = extra_data['name'][4:]
-#     user.save()
-# from django.shortcuts import render
 
-# Create your views here.
+@receiver(user_signed_up)
+def user_signed_up_(**kwargs):
+    user = kwargs['user']
+    extra_data = user.socialaccount_set.filter(provider='naver')[0].extra_data
+    user.last_name = extra_data['name'][0:4]
+    user.first_name = extra_data['name'][4:]
+    user.save()
+from django.shortcuts import render
+
+def create_product(request):
+    if request.method == 'GET':
+        productForm = ProductForm()
+        return render(request, 'shop/create_product.html', {'productForm':productForm})
+    elif request.method == 'POST':
+        productForm = ProductForm(request.POST)
+        if productForm.is_valid():
+            product = productForm.save(commit=False)
+            product.save()
+            print('success')
+        if not productForm.is_valid():
+            print('fail')
+    return redirect('')
